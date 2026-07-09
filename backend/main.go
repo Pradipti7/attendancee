@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
-	"attendancee/internal/auth"
-	"attendancee/internal/database"
-	"attendancee/internal/handlers"
+	"backend/internal/auth"
+	"backend/internal/database"
+	"backend/internal/handlers"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"

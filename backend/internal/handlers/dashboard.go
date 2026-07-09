@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"backend/internal/database"
 	"encoding/json"
 	"net/http"
+
+	"backend/internal/database"
 )
 
 type DashboardData struct {
@@ -16,36 +17,47 @@ type DashboardData struct {
 func GetDashboardData(w http.ResponseWriter, r *http.Request) {
 	var data DashboardData
 
-	// for total students
+	// Total students
 	err := database.DB.QueryRow(`
-	SELECT COUNT (*) FROM students
+		SELECT COUNT(*) FROM students
 	`).Scan(&data.TotalStudents)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// for present students
+	// Present students
 	err = database.DB.QueryRow(`
-	SELECT COUNT (*)
-	FROM students
-	WHERE is_present =true
+		SELECT COUNT(*)
+		FROM students
+		WHERE is_present = true
 	`).Scan(&data.PresentToday)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// for absent students
+	// Absent students
 	err = database.DB.QueryRow(`
-SELECT COUNT(*)
-FROM students
-WHERE is_present-false`).Scan(&data.PresentToday)
+		SELECT COUNT(*)
+		FROM students
+		WHERE is_present = false
+	`).Scan(&data.AbsentToday)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Number of classes
+	err = database.DB.QueryRow(`
+		SELECT COUNT(DISTINCT class_name)
+		FROM students
+	`).Scan(&data.TotalClasses)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
-
 }

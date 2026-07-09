@@ -1,35 +1,75 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Attendance from "./pages/Attendance";
-import Classes from "./pages/Classes";
 import Student from "./pages/Student";
-
-import studentsData from "./data/studentCount";
+import Classes from "./pages/Classes";
 
 function App() {
-  const [students, setStudents] = useState(studentsData);
+  const [students, setStudents] = useState([]);
 
-  const updateStatus = (id, status) => {
-    setStudents(
-      students.map((student) =>
-        student.id === id ? { ...student, status } : student,
-      ),
-    );
+  // Load students
+  // const fetchStudents = async () => {
+  //   try {
+  //     const res = await fetch("http://localhost:8080/students");
+  //     const data = await res.json();
+  //     setStudents(data);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+  const fetchStudents = async () => {
+  try {
+    const res = await fetch("http://localhost:8080/students");
+    const data = await res.json();
+
+    console.log(data);   // <-- add this
+
+    setStudents(data);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  // Add student instantly
+  const handleStudentAdded = (student) => {
+    setStudents((prev) => [...prev, student]);
   };
 
-  const addStudent = (newStudent) => {
-    setStudents([
-      ...students,
-      {
-        ...newStudent,
-        id: students.length + 1,
-        status: "Present",
+  // Update attendance instantly
+  const updateStatus = async (id, value) => {
+    let isPresent = null;
+
+    if (value === "present") isPresent = true;
+    if (value === "absent") isPresent = false;
+
+    const response = await fetch(`http://localhost:8080/students/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
       },
-    ]);
+      body: JSON.stringify({
+        is_present: isPresent,
+      }),
+    });
+
+    if (!response.ok) {
+      alert("Failed to update attendance");
+      return;
+    }
+
+    setStudents((prev) =>
+      prev.map((student) =>
+        student.id === id ? { ...student, is_present: isPresent } : student,
+      ),
+    );
   };
 
   return (
@@ -50,7 +90,9 @@ function App() {
 
         <Route
           path="/student"
-          element={<Student students={students} addStudent={addStudent} />}
+          element={
+            <Student students={students} onStudentAdded={handleStudentAdded} />
+          }
         />
 
         <Route path="/classes" element={<Classes students={students} />} />

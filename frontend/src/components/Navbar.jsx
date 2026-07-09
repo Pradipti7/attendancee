@@ -13,8 +13,8 @@ export default function Navbar() {
         </div>
 
         <div>
-          <p className="font-semibold">Admin</p>
-          <p className="text-sm text-gray-500">Administrator</p>
+          <p className="font-semibold">Hello</p>
+          <p className="text-sm text-gray-500">Teacher</p>
         </div>
       </div>
     </nav>
