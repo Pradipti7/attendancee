@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"backend/internal/database"
+	"backend/internal/models"
 
 	"github.com/go-chi/chi/v5"
 )
