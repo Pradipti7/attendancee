@@ -18,7 +18,7 @@ export default function Signup() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -26,8 +26,32 @@ export default function Signup() {
       return;
     }
 
-    alert("Account Created Successfully!");
-    navigate("/");
+    try {
+      const response = await fetch("http://localhost:8080/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.fullname,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || "Signup failed");
+        return;
+      }
+
+      alert("Account created successfully!");
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      alert("Unable to connect to server.");
+    }
   };
 
   return (

@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"backend/internal/database"
 	"encoding/json"
 	"net/http"
+
+	"backend/internal/database"
 )
 
 type DashboardData struct {
@@ -14,38 +15,47 @@ type DashboardData struct {
 }
 
 func GetDashboardData(w http.ResponseWriter, r *http.Request) {
+
 	var data DashboardData
 
-	// for total students
-	err := database.DB.QueryRow(`
-	SELECT COUNT (*) FROM students
-	`).Scan(&data.TotalStudents)
-	if err != nil {
+	// Total students
+	if err := database.DB.QueryRow(`
+		SELECT COUNT(*)
+		FROM students
+	`).Scan(&data.TotalStudents); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// for present students
-	err = database.DB.QueryRow(`
-	SELECT COUNT (*)
-	FROM students
-	WHERE is_present =true
-	`).Scan(&data.PresentToday)
-	if err != nil {
+	// Present students only
+	if err := database.DB.QueryRow(`
+		SELECT COUNT(*)
+		FROM students
+		WHERE is_present IS TRUE
+	`).Scan(&data.PresentToday); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// for absent students
-	err = database.DB.QueryRow(`
-SELECT COUNT(*)
-FROM students
-WHERE is_present-false`).Scan(&data.PresentToday)
-	if err != nil {
+	// Absent students only
+	if err := database.DB.QueryRow(`
+		SELECT COUNT(*)
+		FROM students
+		WHERE is_present IS FALSE
+	`).Scan(&data.AbsentToday); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Total unique classes
+	if err := database.DB.QueryRow(`
+		SELECT COUNT(DISTINCT class_name)
+		FROM students
+	`).Scan(&data.TotalClasses); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
-
 }

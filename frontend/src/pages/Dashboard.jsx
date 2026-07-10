@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import DisplayDate from "../components/DisplayDate";
@@ -11,27 +13,29 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-export default function Dashboard({ students }) {
-  const totalStudents = students.length;
+export default function Dashboard() {
+  const [dashboard, setDashboard] = useState({
+    total_students: 0,
+    present_today: 0,
+    absent_today: 0,
+    total_classes: 0,
+  });
 
-  const presentStudents = students.filter(
-    (student) => student.status === "Present",
-  ).length;
-
-  const absentStudents = students.filter(
-    (student) => student.status === "Absent",
-  ).length;
-
-  const totalClasses = 4;
+  useEffect(() => {
+    fetch("http://localhost:8080/dashboard-data")
+      .then((res) => res.json())
+      .then((data) => setDashboard(data))
+      .catch((err) => console.error(err));
+  }, []);
 
   const attendanceData = [
     {
       name: "Present",
-      value: presentStudents,
+      value: dashboard.present_today,
     },
     {
       name: "Absent",
-      value: absentStudents,
+      value: dashboard.absent_today,
     },
   ];
 
@@ -43,49 +47,55 @@ export default function Dashboard({ students }) {
 
       <div className="flex-1">
         <Navbar />
-
         <DisplayDate />
 
         <div className="p-8 grid grid-cols-4 gap-5">
           <div className="bg-white p-6 rounded-xl shadow">
             <p className="text-gray-500 text-sm">Total Students</p>
-
-            <p className="text-3xl font-bold text-[#562F92]">{totalStudents}</p>
+            <p className="text-3xl font-bold text-[#562F92]">
+              {dashboard.total_students}
+            </p>
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow">
             <p className="text-gray-500 text-sm">Present Today</p>
-
             <p className="text-3xl font-bold text-[#39C670]">
-              {presentStudents}
+              {dashboard.present_today}
             </p>
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow">
             <p className="text-gray-500 text-sm">Absent Today</p>
-
             <p className="text-3xl font-bold text-[#A82837]">
-              {absentStudents}
+              {dashboard.absent_today}
             </p>
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow">
             <p className="text-gray-500 text-sm">Total Classes</p>
+            <p className="text-3xl font-bold text-[#4C9BE8]">
+              {dashboard.total_classes}
+            </p>
+          </div>
 
-            <p className="text-3xl font-bold text-[#4C9BE8]">{totalClasses}</p>
+          <div className="bg-white p-6 rounded-xl shadow">
+            <p className="text-gray-500 text-sm">Total Teachers</p>
+            <p className="text-3xl font-bold text-[#562F92]">8</p>
           </div>
         </div>
 
         <div className="px-8 pb-8">
-          <div className="bg-white p-6 rounded-xl shadow">
-            <h2 className="font-semibold mb-4">Today's Attendance</h2>
+          <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Today's Attendance</h2>
 
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <PieChart>
                 <Pie
                   data={attendanceData}
                   dataKey="value"
                   nameKey="name"
+                  cx="50%"
+                  cy="50%"
                   innerRadius={70}
                   outerRadius={100}
                   paddingAngle={3}
@@ -97,7 +107,7 @@ export default function Dashboard({ students }) {
                 </Pie>
 
                 <Tooltip />
-                <Legend />
+                <Legend verticalAlign="bottom" />
               </PieChart>
             </ResponsiveContainer>
           </div>
