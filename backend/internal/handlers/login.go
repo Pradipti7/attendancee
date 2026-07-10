@@ -1,40 +1,95 @@
 package handlers
 
 import (
-	"backend/internal/database"
 	"database/sql"
 	"encoding/json"
 	"net/http"
+
+	"backend/internal/database"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	Message string `json:"message"`
+}
+
 func Login(w http.ResponseWriter, r *http.Request) {
-	var loginData User
-
-	err := json.NewDecoder(r.Body).Decode(&loginData)
-	if err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	var user User
 
-	err = database.DB.QueryRow(`
-	SELECT id, username, password
-	FROM users 
-	WHERE username = $1
-	`, loginData.Username).Scan(&user.ID, &user.Username, &user.Password)
+	var loginData LoginRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&loginData); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(LoginResponse{
+			Message: "Invalid request",
+		})
+		return
+	}
+
+	var (
+		id           int
+		email        string
+		passwordHash string
+		name         string
+		role         string
+	)
+
+	err := database.DB.QueryRow(`
+		SELECT id, email, password_hash, name, role
+		FROM users
+		WHERE email = $1
+	`, loginData.Email).Scan(
+		&id,
+		&email,
+		&passwordHash,
+		&name,
+		&role,
+	)
+
 	if err == sql.ErrNoRows {
-		http.Error(w, "Invalid Username or Password", http.StatusUnauthorized)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(LoginResponse{
+			Message: "Invalid email or password",
+		})
 		return
 	}
+
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(LoginResponse{
+			Message: "Server error",
+		})
 		return
 	}
-	if loginData.Password != user.Password {
-		http.Error(w, "Invalid Username or Password", http.StatusUnauthorized)
+
+	err = bcrypt.CompareHashAndPassword(
+		[]byte(passwordHash),
+		[]byte(loginData.Password),
+	)
+
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(LoginResponse{
+			Message: "Invalid email or password",
+		})
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Login Sucessful",
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(LoginResponse{
+		Message: "Login successful",
 	})
 }
