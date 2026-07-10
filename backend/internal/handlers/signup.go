@@ -1,40 +1,53 @@
 package handlers
 
 import (
+	"backend/internal/database"
+	"backend/internal/models"
 	"encoding/json"
 	"net/http"
 
-	"backend/internal/database"
+	"golang.org/x/crypto/bcrypt"
 )
 
-type User struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 func Signup(w http.ResponseWriter, r *http.Request) {
-	var user User
 
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+	var user models.User
+
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	_, err = database.DB.Exec(`
-	INSERT INTO users (username, password)
-	VALUES ($1, $2)`,
-		user.Username,
-		user.Password)
+	hashedPassword, err := bcrypt.GenerateFromPassword(
+		[]byte(user.Password),
+		bcrypt.DefaultCost,
+	)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Couldn't hash password", http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "User created Sucessfully",
-	})
 
+	err = database.DB.QueryRow(`
+		INSERT INTO users
+		(name, email, password_hash)
+		VALUES ($1,$2,$3)
+		RETURNING id;
+	`,
+		user.Name,
+		user.Email,
+		string(hashedPassword),
+	).Scan(&user.ID)
+
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": err.Error(),
+		})
+	}
+	user.Password = ""
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }
