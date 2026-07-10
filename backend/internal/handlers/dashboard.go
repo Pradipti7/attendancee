@@ -33,6 +33,10 @@ func GetDashboardData(w http.ResponseWriter, r *http.Request) {
 		FROM students
 		WHERE is_present IS TRUE
 	`).Scan(&data.PresentToday); err != nil {
+	err := database.DB.QueryRow(`
+		SELECT COUNT(*) FROM students
+	`).Scan(&data.TotalStudents)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -43,6 +47,13 @@ func GetDashboardData(w http.ResponseWriter, r *http.Request) {
 		FROM students
 		WHERE is_present IS FALSE
 	`).Scan(&data.AbsentToday); err != nil {
+	// Present students
+	err = database.DB.QueryRow(`
+		SELECT COUNT(*)
+		FROM students
+		WHERE is_present = true
+	`).Scan(&data.PresentToday)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -52,6 +63,23 @@ func GetDashboardData(w http.ResponseWriter, r *http.Request) {
 		SELECT COUNT(DISTINCT class_name)
 		FROM students
 	`).Scan(&data.TotalClasses); err != nil {
+	// Absent students
+	err = database.DB.QueryRow(`
+		SELECT COUNT(*)
+		FROM students
+		WHERE is_present = false
+	`).Scan(&data.AbsentToday)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Number of classes
+	err = database.DB.QueryRow(`
+		SELECT COUNT(DISTINCT class_name)
+		FROM students
+	`).Scan(&data.TotalClasses)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

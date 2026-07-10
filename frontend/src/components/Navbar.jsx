@@ -7,14 +7,14 @@ export default function Navbar() {
         </h1>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="w-11 h-11 rounded-full bg-[#562F92] text-white flex items-center justify-center font-bold">
-          A
+      <div className="flex items-left gap-4">
+        <div className="  flex items-center justify-center font-bold">
+          Hello Teacher
         </div>
-
         <div>
-          <p className="font-semibold">Admin</p>
-          <p className="text-sm text-gray-500">Administrator</p>
+          <div className="w-11 h-11  flex items-center rounded-full bg-[#562F92] text-white flex items-center justify-center font-bold">
+            P
+          </div>
         </div>
       </div>
     </nav>

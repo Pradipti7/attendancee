@@ -62,6 +62,65 @@ function App() {
     } catch (err) {
       console.error(err);
     }
+  // Load students
+  // const fetchStudents = async () => {
+  //   try {
+  //     const res = await fetch("http://localhost:8080/students");
+  //     const data = await res.json();
+  //     setStudents(data);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+  const fetchStudents = async () => {
+  try {
+    const res = await fetch("http://localhost:8080/students");
+    const data = await res.json();
+
+    console.log(data);   // <-- add this
+
+    setStudents(data);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  // Add student instantly
+  const handleStudentAdded = (student) => {
+    setStudents((prev) => [...prev, student]);
+  };
+
+  // Update attendance instantly
+  const updateStatus = async (id, value) => {
+    let isPresent = null;
+
+    if (value === "present") isPresent = true;
+    if (value === "absent") isPresent = false;
+
+    const response = await fetch(`http://localhost:8080/students/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        is_present: isPresent,
+      }),
+    });
+
+    if (!response.ok) {
+      alert("Failed to update attendance");
+      return;
+    }
+
+    setStudents((prev) =>
+      prev.map((student) =>
+        student.id === id ? { ...student, is_present: isPresent } : student,
+      ),
+    );
   };
 
   return (
