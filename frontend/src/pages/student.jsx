@@ -3,38 +3,13 @@ import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import DisplayDate from "../components/DisplayDate";
+import StudentModal from "../components/StudentModal";
 
-export default function Student({ students, addStudent }) {
+export default function Student({ students, onStudentAdded }) {
   const [showModal, setShowModal] = useState(false);
 
-  const [newStudent, setNewStudent] = useState({
-    name: "",
-    className: "",
-    email: "",
-    address: "",
-    number: "",
-  });
-
-  const handleChange = (e) => {
-    setNewStudent({
-      ...newStudent,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    addStudent(newStudent);
-
-    setNewStudent({
-      name: "",
-      className: "",
-      email: "",
-      address: "",
-      number: "",
-    });
-
+  const handleSuccess = (newStudent) => {
+    onStudentAdded(newStudent);
     setShowModal(false);
   };
 
@@ -44,7 +19,6 @@ export default function Student({ students, addStudent }) {
 
       <div className="flex-1">
         <Navbar />
-
         <DisplayDate />
 
         <div className="p-8">
@@ -53,12 +27,17 @@ export default function Student({ students, addStudent }) {
               <h2 className="text-2xl font-bold text-[#562F92]">
                 Student List
               </h2>
-
+              {showModal && (
+                <StudentModal
+                  onClose={() => setShowModal(false)}
+                  onSuccess={handleSuccess}
+                />
+              )}
               <button
                 onClick={() => setShowModal(true)}
                 className="bg-[#562F92] text-white px-5 py-2 rounded-lg hover:bg-[#45226f]"
               >
-                + Add Student
+                Add Student
               </button>
             </div>
 
@@ -81,11 +60,7 @@ export default function Student({ students, addStudent }) {
 
                     <td className="p-4">{student.name}</td>
 
-                    <td className="p-4">
-                      <span className="bg-[#4C9BE8] text-white px-3 py-1 rounded-full text-sm">
-                        {student.className}
-                      </span>
-                    </td>
+                    <td className="p-4">{student.class_name}</td>
 
                     <td className="p-4">{student.email}</td>
 
@@ -98,93 +73,6 @@ export default function Student({ students, addStudent }) {
             </table>
           </div>
         </div>
-
-        {showModal && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-            <div className="bg-white w-[500px] rounded-xl p-6 shadow-lg">
-              <h2 className="text-2xl font-bold text-[#562F92] mb-6">
-                Add Student
-              </h2>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Student Name"
-                  value={newStudent.name}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg p-3"
-                  required
-                />
-
-                <select
-                  name="className"
-                  value={newStudent.className}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg p-3"
-                  required
-                >
-                  <option value="">Select Class</option>
-
-                  <option value="English">English</option>
-
-                  <option value="Math">Math</option>
-
-                  <option value="Science">Science</option>
-
-                  <option value="Music">Music</option>
-                </select>
-
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  value={newStudent.email}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg p-3"
-                  required
-                />
-
-                <input
-                  type="text"
-                  name="address"
-                  placeholder="Address"
-                  value={newStudent.address}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg p-3"
-                  required
-                />
-
-                <input
-                  type="text"
-                  name="number"
-                  placeholder="Phone Number"
-                  value={newStudent.number}
-                  onChange={handleChange}
-                  className="w-full border rounded-lg p-3"
-                  required
-                />
-
-                <div className="flex justify-end gap-3 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="px-5 py-2 rounded-lg border"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="bg-[#562F92] text-white px-5 py-2 rounded-lg hover:bg-[#45226f]"
-                  >
-                    Save
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
