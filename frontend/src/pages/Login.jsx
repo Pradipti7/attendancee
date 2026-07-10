@@ -4,6 +4,8 @@ import { useNavigate, Link } from "react-router-dom";
 export default function Login() {
   const navigate = useNavigate();
 
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -16,11 +18,33 @@ export default function Login() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Frontend version (no backend)
-    navigate("/dashboard");
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:8080/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Invalid email or password");
+        return;
+      }
+
+      // Login successful
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      setError("Wrong Email or Password..");
+    }
   };
 
   return (
@@ -30,7 +54,14 @@ export default function Login() {
           Welcome Back
         </h1>
 
-        <p className="text-center text-gray-500 mb-8">Login to your account</p>
+        <p className="text-center text-gray-500 mb-6">Login to your account</p>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-5 rounded-lg border border-red-300 bg-red-100 text-red-700 px-4 py-3 text-center">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <input
@@ -39,7 +70,7 @@ export default function Login() {
             placeholder="Email Address"
             value={formData.email}
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#562F92]"
             required
           />
 
@@ -49,13 +80,13 @@ export default function Login() {
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#562F92]"
             required
           />
 
           <button
             type="submit"
-            className="w-full bg-[#562F92] text-white py-3 rounded-lg hover:bg-[#45226f]"
+            className="w-full bg-[#562F92] text-white py-3 rounded-lg hover:bg-[#45226f] transition"
           >
             Login
           </button>

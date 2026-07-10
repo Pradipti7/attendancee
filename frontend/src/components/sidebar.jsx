@@ -29,7 +29,7 @@ export default function Sidebar() {
   return (
     <aside className="w-64 min-h-screen bg-[#562F92] text-white flex flex-col">
       <div className="text-center py-8 border-b border-[#7550b8]">
-        <h1 className="text-3xl font-bold">AMS</h1>
+        <h1 className="text-3xl font-bold">SP</h1>
         <p className="text-sm mt-2 opacity-80">Attendance System</p>
       </div>
 
